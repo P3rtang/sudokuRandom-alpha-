@@ -97,7 +97,7 @@ def build():
 
     pos = solveAll(tester)
 
-    while empty < 52 and tries < 100:
+    while empty < 50 and tries < 100:
         while len(pos) == 1 and tries < 100:
             x = rand.randrange(9)
             y = rand.randrange(9)
@@ -161,8 +161,7 @@ class UI:
     def generate_pdf(self):
         self.frame.update()
         self.frame.postscript(file="tmp.ps", colormode='color')
-        process = subprocess.Popen(["C:\\Users\\tom-v\\Documents\\sudokuRandom_V0.1\\lib\\ps2pdf", "tmp.ps",
-                                    "result.pdf"], shell=True)
+        process = subprocess.Popen(["ps2pdf", "tmp.ps", "result.pdf"], shell=True)
         process.wait()
         os.remove('tmp.ps')
 
