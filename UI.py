@@ -222,7 +222,7 @@ class UI:
     def generate_pdf(self):
         self.frame.update()
         self.frame.postscript(file="tmp.ps", colormode='color')
-        process = subprocess.Popen([".\\lib\\ps2pdf", "tmp.ps", ".\\saves\\sudoku.pdf"], shell=True)
+        process = subprocess.Popen(["ps2pdf", "tmp.ps", ".\\saves\\sudoku.pdf"], shell=True)
         process.wait()
         os.remove('tmp.ps')
         subprocess.Popen('.\\saves\\sudoku.pdf', shell=True)

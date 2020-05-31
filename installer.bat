@@ -1,1 +1,1 @@
-pyinstaller.exe --onefile --nowindow UI.py
+pyinstaller.exe --clean --onefile --nowindow UI.py
