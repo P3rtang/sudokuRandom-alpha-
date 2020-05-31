@@ -111,32 +111,41 @@ class UI:
         main_menu = Menu(self.root)
         self.root.config(menu=main_menu)
 
-        file_menu = Menu(main_menu)
-        main_menu.add_cascade(label='File', menu=file_menu)
+        self.file_menu = Menu(main_menu)
+        self.option_menu = Menu(main_menu)
+        main_menu.add_cascade(label='File', menu=self.file_menu)
+        main_menu.add_cascade(label='Options', menu=self.option_menu)
 
         # add file menu commands
-        file_menu.add_command(label='print to PDF', command=self.generate_pdf)
-        file_menu.add_command(label='Save as...', command=self.save)
-        file_menu.add_command(label='Exit', command=exit)
+        self.file_menu.add_command(label='print to PDF', command=self.generate_pdf)
+        self.file_menu.add_command(label='Save as...', command=self.save)
+        self.file_menu.add_command(label='Exit', command=exit)
 
-        self.frame = Canvas(self.root, width=446, height=446)
+        # add options under option menu
+        self.option_menu.add_command(label='Show Solution', command=self.show_solution)
+
+        self.frame = Canvas(self.root, width=455, height=455)
+        self.frameS = Canvas(self.root, width=455, height=455)
         self.display()
 
         # generate new sudoku
         generate_new = Button(self.root, text="New Sudoku", command=self.build)
         generate_new.grid(column=0, row=1)
 
-        for i in range(11):
-            if i % 3:
-                self.frame.create_line(50 * i, 0, 50 * i, 500, fill='grey', tag='gridlines')
-                self.frame.create_line(0, 50 * i, 500, 50 * i, fill='grey', tag='gridlines')
-            else:
-                self.frame.create_line(50 * i, 0, 50 * i, 500, fill='black', width=2, tag='gridlines')
-                self.frame.create_line(0, 50 * i, 500, 50 * i, fill='black', width=2, tag='gridlines')
-
+        self.create_frame()
         self.root.mainloop()
 
+    def create_frame(self, offset_x=3, offset_y=3):
+        for i in range(10):
+            if i % 3:
+                self.frame.create_line(offset_x + 50 * i, offset_y + 0, offset_x + 50 * i, offset_y + 450, fill='grey', tag='gridlines')
+                self.frame.create_line(offset_x + 0, offset_y + 50 * i, offset_x + 450, offset_y + 50 * i, fill='grey', tag='gridlines')
+            else:
+                self.frame.create_line(offset_x + 50 * i, offset_y + 0, offset_x + 50 * i, offset_y + 450, fill='black', width=2, tag='gridlines')
+                self.frame.create_line(offset_x + 0, offset_y + 50 * i, offset_x + 450, offset_y + 50 * i, fill='black', width=2, tag='gridlines')
+
     def build(self):
+        self.hide_solution()
         print('building')
         # build empty grid
         self.grid = []
@@ -197,17 +206,26 @@ class UI:
         self.sud = sudoku
         self.display()
 
-    def display(self):
-        self.frame.delete('text')
+    def display(self, solution=False):
+        def fill_grid(offset_x=3, offset_y=3):
+            for i in range(height):  # Rows
+                for j in range(width):  # Columns
+                    num = str(numbers[j][i])
+                    num = str(num) if num != '0' else ''
+                    self.frame.create_text((offset_x + 50 * i + 25, offset_y + 50 * j + 25), anchor='center', text=num,
+                                           font=('times new roman', '25'), tag='text')
+            self.frame.grid(column=0, row=0, padx=5, pady=5)
+
         height = 9
         width = 9
-        for i in range(height):  # Rows
-            for j in range(width):  # Columns
-                num = str(self.sud[j][i])
-                num = str(num) if num != '0' else ''
-                self.frame.create_text((50 * i + 25, 50 * j + 25), anchor='center', text=num,
-                                       font=('times new roman', '25'), tag='text')
-        self.frame.grid(column=0, row=0)
+        if not solution:
+            self.frame.delete('text')
+            numbers = self.sud
+            fill_grid()
+        else:
+            self.frame.delete('textS')
+            numbers = self.solution
+            fill_grid(500)
 
     def save(self):
         save_file = repack(self.sud)
@@ -217,15 +235,29 @@ class UI:
         save_data.write(save_data_str)
         save_data.close()
 
-
-
     def generate_pdf(self):
+        self.hide_solution()
         self.frame.update()
         self.frame.postscript(file="tmp.ps", colormode='color')
         process = subprocess.Popen([".\\lib\\ps2pdf", "tmp.ps", ".\\saves\\sudoku.pdf"], shell=True)
         process.wait()
         os.remove('tmp.ps')
         subprocess.Popen('.\\saves\\sudoku.pdf', shell=True)
+
+    def show_solution(self):
+        global solvedgrid
+        copy1 = copy.deepcopy(self.sud)
+        solve(copy1)
+        self.solution = solvedgrid
+        self.frame.configure(width=955)
+        self.create_frame(500)
+        self.option_menu.entryconfig(1, label='Hide Solution', command=self.hide_solution)
+        self.display(True)
+
+    def hide_solution(self):
+        self.frame.configure(width=455)
+        self.option_menu.entryconfig(1, label='Show Solution', command=self.show_solution)
+
 
 
 if __name__ == '__main__':
