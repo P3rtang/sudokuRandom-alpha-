@@ -96,110 +96,136 @@ def format(string):
     solve(sudoku)
 
 
-def build():
-    print('building')
-    # build empty grid
-    grid = []
-    for x in range(9):
-        temp = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-        grid.append(temp)
-
-    # build random diagonal
-    for x in [0, 3, 6]:
-        a, b, c = rand.sample(range(1, 10), 3)
-        grid[x][x] = a
-        grid[x + 1][x + 1] = b
-        grid[x + 2][x + 2] = c
-
-    empty = 0
-    tries = 0
-
-    print(grid)
-    solve(grid)
-    sudoku = copy.deepcopy(solvedgrid)
-
-    x = rand.randrange(9)
-    y = rand.randrange(9)
-    b = sudoku[x][y]
-    c = sudoku[8 - x][8 - y]
-    sudoku[x][y] = 0
-    sudoku[8 - x][8 - y] = 0
-    tester = copy.deepcopy(sudoku)
-
-    unique = check_unique(tester)
-
-    while tries < 60 and empty < 50:
-        while unique == 1 and tries < 60:
-            x = rand.randrange(9)
-            y = rand.randrange(9)
-            b = sudoku[x][y]
-            c = sudoku[8 - x][8 - y]
-            if b != 0:
-                sudoku[x][y] = 0
-                sudoku[8 - x][8 - y] = 0
-                tester = copy.deepcopy(sudoku)
-                unique = check_unique(tester)
-                if __name__ == '__main__':
-                    print(empty, ': ', sudoku)
-            tries += 1
-            if tries % 10 == 1:
-                print('=', end='')
-
-        sudoku[8 - x][8 - y] = c
-        sudoku[x][y] = b
-        tester = copy.deepcopy(sudoku)
-        unique = check_unique(tester)
-
-        empty = 0
-        for s in sudoku:
-            empty += s.count(0)
-
-    return sudoku
-
-
 class UI:
     def __init__(self):
-        self.sud = build()
-        test = copy.deepcopy(self.sud)
-        unique = check_unique(test)
-        print(unique)
-        if not unique:
-            raise Exception
-        # self.sud =  [[2, 9, 7, 3, 6, 8, 1, 4, 5], [8, 4, 5, 1, 9, 7, 3, 2, 6], [6, 3, 1, 4, 5, 2, 7, 8, 9], [1, 8, 9, 5, 4, 6, 2, 3, 7], [5, 2, 6, 7, 3, 1, 4, 9, 8], [3, 7, 4, 2, 8, 9, 6, 5, 1], [7, 1, 8, 9, 2, 4, 5, 6, 3], [4, 6, 3, 8, 7, 5, 9, 1, 2], [9, 5, 2, 6, 1, 3, 8, 7, 4]]
-        print('\n', self.sud)
+        # create empty sudoku
+        self.sud = []
+        for x in range(9):
+            temp = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+            self.sud.append(temp)
 
+        # self.sud =  [[2, 9, 7, 3, 6, 8, 1, 4, 5], [8, 4, 5, 1, 9, 7, 3, 2, 6], [6, 3, 1, 4, 5, 2, 7, 8, 9], [1, 8, 9, 5, 4, 6, 2, 3, 7], [5, 2, 6, 7, 3, 1, 4, 9, 8], [3, 7, 4, 2, 8, 9, 6, 5, 1], [7, 1, 8, 9, 2, 4, 5, 6, 3], [4, 6, 3, 8, 7, 5, 9, 1, 2], [9, 5, 2, 6, 1, 3, 8, 7, 4]]
         self.root = Tk()
 
-        self.frame = Canvas(self.root, width=446, height=446)
+        # create menus
+        main_menu = Menu(self.root)
+        self.root.config(menu=main_menu)
 
+        file_menu = Menu(main_menu)
+        main_menu.add_cascade(label='File', menu=file_menu)
+
+        # add file menu commands
+        file_menu.add_command(label='print to PDF', command=self.generate_pdf)
+        file_menu.add_command(label='Save as...', command=self.save)
+        file_menu.add_command(label='Exit', command=exit)
+
+        self.frame = Canvas(self.root, width=446, height=446)
+        self.display()
+
+        # generate new sudoku
+        generate_new = Button(self.root, text="New Sudoku", command=self.build)
+        generate_new.grid(column=0, row=1)
+
+        for i in range(11):
+            if i % 3:
+                self.frame.create_line(50 * i, 0, 50 * i, 500, fill='grey', tag='gridlines')
+                self.frame.create_line(0, 50 * i, 500, 50 * i, fill='grey', tag='gridlines')
+            else:
+                self.frame.create_line(50 * i, 0, 50 * i, 500, fill='black', width=2, tag='gridlines')
+                self.frame.create_line(0, 50 * i, 500, 50 * i, fill='black', width=2, tag='gridlines')
+
+        self.root.mainloop()
+
+    def build(self):
+        print('building')
+        # build empty grid
+        self.grid = []
+        for x in range(9):
+            temp = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+            self.grid.append(temp)
+
+        # build random diagonal
+        for x in [0, 3, 6]:
+            a, b, c = rand.sample(range(1, 10), 3)
+            self.grid[x][x] = a
+            self.grid[x + 1][x + 1] = b
+            self.grid[x + 2][x + 2] = c
+
+        empty = 0
+        tries = 0
+
+        print(self.grid)
+        solve(self.grid)
+        sudoku = copy.deepcopy(solvedgrid)
+
+        x = rand.randrange(9)
+        y = rand.randrange(9)
+        b = sudoku[x][y]
+        c = sudoku[8 - x][8 - y]
+        sudoku[x][y] = 0
+        sudoku[8 - x][8 - y] = 0
+        tester = copy.deepcopy(sudoku)
+
+        unique = check_unique(tester)
+
+        while tries < 60 and empty < 50:
+            while unique == 1 and tries < 60:
+                x = rand.randrange(9)
+                y = rand.randrange(9)
+                b = sudoku[x][y]
+                c = sudoku[8 - x][8 - y]
+                if b != 0:
+                    sudoku[x][y] = 0
+                    sudoku[8 - x][8 - y] = 0
+                    tester = copy.deepcopy(sudoku)
+                    unique = check_unique(tester)
+                    if __name__ == '__main__':
+                        print(empty, ': ', sudoku)
+                tries += 1
+                if tries % 10 == 1:
+                    print('=', end='')
+
+            sudoku[8 - x][8 - y] = c
+            sudoku[x][y] = b
+            tester = copy.deepcopy(sudoku)
+            unique = check_unique(tester)
+
+            empty = 0
+            for s in sudoku:
+                empty += s.count(0)
+
+        self.sud = sudoku
+        self.display()
+
+    def display(self):
+        self.frame.delete('text')
         height = 9
         width = 9
         for i in range(height):  # Rows
             for j in range(width):  # Columns
                 num = str(self.sud[j][i])
                 num = str(num) if num != '0' else ''
-                self.frame.create_text((50 * i + 25, 50 * j + 25), anchor='center', text=num, font=('times new roman', '25'))
-        self.frame.pack()
-        print_button = Button(self.root, text="print", command=self.generate_pdf)
-        print_button.pack()
+                self.frame.create_text((50 * i + 25, 50 * j + 25), anchor='center', text=num,
+                                       font=('times new roman', '25'), tag='text')
+        self.frame.grid(column=0, row=0)
 
-        for i in range(11):
-            if i % 3:
-                self.frame.create_line(50 * i, 0, 50 * i, 500, fill='grey')
-                self.frame.create_line(0, 50 * i, 500, 50 * i, fill='grey')
-            else:
-                self.frame.create_line(50 * i, 0, 50 * i, 500, fill='black', width=2)
-                self.frame.create_line(0, 50 * i, 500, 50 * i, fill='black', width=2)
+    def save(self):
+        save_file = repack(self.sud)
+        save_data = open('.saves\\sudoku.txt', 'w+')
+        save_data_str = str(save_data.read())
+        save_data_str += f'\n{save_file}'
+        save_data.write(save_data_str)
+        save_data.close()
 
 
-        self.root.mainloop()
 
     def generate_pdf(self):
         self.frame.update()
         self.frame.postscript(file="tmp.ps", colormode='color')
-        process = subprocess.Popen(["ps2pdf", "tmp.ps", "result.pdf"], shell=True)
+        process = subprocess.Popen([".\\lib\\ps2pdf", "tmp.ps", ".\\saves\\sudoku.pdf"], shell=True)
         process.wait()
         os.remove('tmp.ps')
+        subprocess.Popen('.\\saves\\sudoku.pdf', shell=True)
 
 
 if __name__ == '__main__':
