@@ -1,7 +1,9 @@
+import sys
+sys.path.extend('.\\bin')
+
 from tkinter import *
 import subprocess
 import ghostscript
-import os
 import random as rand
 import copy
 
