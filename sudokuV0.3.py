@@ -1,5 +1,3 @@
-import sys
-sys.path.extend('.\\bin')
 import os
 from tkinter import *
 import subprocess
