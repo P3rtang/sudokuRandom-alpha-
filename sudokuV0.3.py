@@ -228,7 +228,7 @@ class UI:
 
     def save(self):
         save_file = repack(self.sud)
-        save_data = open('.saves\\sudoku.txt', 'w+')
+        save_data = open('.\\saves\\sudoku.txt', 'w+')
         save_data_str = str(save_data.read())
         save_data_str += f'\n{save_file}'
         save_data.write(save_data_str)
