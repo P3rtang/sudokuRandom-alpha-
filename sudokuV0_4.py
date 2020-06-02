@@ -105,6 +105,7 @@ class UI:
             self.sud.append(temp)
 
         self.numbers = []
+        self.difficulty = 60
 
         # build empty grid
         self.grid = []
@@ -127,7 +128,13 @@ class UI:
         self.file_menu.add_command(label='Exit', command=exit)
 
         # add options under option menu
+        self.diff = Menu(self.option_menu)
         self.option_menu.add_command(label='Show Solution', command=self.show_solution)
+        self.option_menu.add_cascade(label='difficulty', menu=self.diff)
+
+        self.diff.add_command(label='easy', command=lambda :self.set_diff(1))
+        self.diff.add_command(label='normal', command=lambda :self.set_diff(2))
+        self.diff.add_command(label='hard (might take a while)', command=lambda: self.set_diff(3))
 
         self.frame = Canvas(self.root, width=455, height=455)
         self.frameS = Canvas(self.root, width=455, height=455)
@@ -140,7 +147,7 @@ class UI:
         self.create_frame()
 
         pixel_virtual = PhotoImage(width=1, height=1)
-        
+
         for i in range(9):
             self.numbers.append(
                 Button(self.root, text=str(i + 1), image=pixel_virtual, height=45, width=45, compound='c',
@@ -155,10 +162,17 @@ class UI:
         self.frame.bind('<Button-1>', self.get_xy)
         self.frame.bind('<Key>', self.insert_key)
 
-
-
         if __name__ == '__main__':
             self.root.mainloop()
+
+    def set_diff(self, diff):
+        if diff == 1:
+            self.difficulty = 40
+        elif diff == 2:
+            self.difficulty = 60
+        else:
+            self.difficulty = 100
+
 
     def create_frame(self, offset_x=3, offset_y=3):
         for i in range(10):
@@ -202,8 +216,8 @@ class UI:
 
         unique = check_unique(tester)
 
-        while tries < 60 and empty < 50:
-            while unique == 1 and tries < 60:
+        while tries < self.difficulty and empty < 54:
+            while unique == 1 and tries < self.difficulty:
                 x = rand.randrange(9)
                 y = rand.randrange(9)
                 b = sudoku[x][y]
