@@ -103,6 +103,9 @@ class UI:
             temp = [0, 0, 0, 0, 0, 0, 0, 0, 0]
             self.sud.append(temp)
 
+        # build empty grid
+        self.grid = []
+
         # self.sud =  [[2, 9, 7, 3, 6, 8, 1, 4, 5], [8, 4, 5, 1, 9, 7, 3, 2, 6], [6, 3, 1, 4, 5, 2, 7, 8, 9], [1, 8, 9, 5, 4, 6, 2, 3, 7], [5, 2, 6, 7, 3, 1, 4, 9, 8], [3, 7, 4, 2, 8, 9, 6, 5, 1], [7, 1, 8, 9, 2, 4, 5, 6, 3], [4, 6, 3, 8, 7, 5, 9, 1, 2], [9, 5, 2, 6, 1, 3, 8, 7, 4]]
         self.root = Tk()
 
@@ -129,10 +132,11 @@ class UI:
 
         # generate new sudoku
         generate_new = Button(self.root, text="New Sudoku", command=self.build)
-        generate_new.grid(column=0, row=1)
+        generate_new.grid(column=0, row=1, columnspan=9)
 
         self.create_frame()
-        self.root.mainloop()
+        if __name__ == '__main__':
+            self.root.mainloop()
 
     def create_frame(self, offset_x=3, offset_y=3):
         for i in range(10):
@@ -140,14 +144,13 @@ class UI:
                 self.frame.create_line(offset_x + 50 * i, offset_y + 0, offset_x + 50 * i, offset_y + 450, fill='grey', tag='gridlines')
                 self.frame.create_line(offset_x + 0, offset_y + 50 * i, offset_x + 450, offset_y + 50 * i, fill='grey', tag='gridlines')
             else:
-                self.frame.create_line(offset_x + 50 * i, offset_y + 0, offset_x + 50 * i, offset_y + 450, fill='black', width=2, tag='gridlines')
-                self.frame.create_line(offset_x + 0, offset_y + 50 * i, offset_x + 450, offset_y + 50 * i, fill='black', width=2, tag='gridlines')
+                self.frame.create_line(offset_x + 50 * i, offset_y + 0, offset_x + 50 * i, offset_y + 450, fill='black', width=2, tag='main_gridlines')
+                self.frame.create_line(offset_x + 0, offset_y + 50 * i, offset_x + 450, offset_y + 50 * i, fill='black', width=2, tag='main_gridlines')
+        self.frame.tag_raise('main_gridlines')
 
     def build(self):
         self.hide_solution()
         print('building')
-        # build empty grid
-        self.grid = []
         for x in range(9):
             temp = [0, 0, 0, 0, 0, 0, 0, 0, 0]
             self.grid.append(temp)
@@ -165,6 +168,7 @@ class UI:
         print(self.grid)
         solve(self.grid)
         sudoku = copy.deepcopy(solvedgrid)
+        self.solved = copy.deepcopy(solvedgrid)
 
         x = rand.randrange(9)
         y = rand.randrange(9)
@@ -213,12 +217,13 @@ class UI:
                     num = str(num) if num != '0' else ''
                     self.frame.create_text((offset_x + 50 * i + 25, offset_y + 50 * j + 25), anchor='center', text=num,
                                            font=('times new roman', '25'), tag='text')
-            self.frame.grid(column=0, row=0, padx=5, pady=5)
+            self.frame.grid(column=0, row=0, padx=5, pady=5, columnspan=9)
 
         height = 9
         width = 9
         if not solution:
             self.frame.delete('text')
+            self.frame.delete('insert')
             numbers = self.sud
             fill_grid()
         else:
@@ -256,7 +261,6 @@ class UI:
     def hide_solution(self):
         self.frame.configure(width=455)
         self.option_menu.entryconfig(1, label='Show Solution', command=self.show_solution)
-
 
 
 if __name__ == '__main__':
