@@ -3,6 +3,7 @@ from tkinter import *
 import subprocess
 import random as rand
 import copy
+import math
 
 
 def unpack(string):
@@ -103,6 +104,8 @@ class UI:
             temp = [0, 0, 0, 0, 0, 0, 0, 0, 0]
             self.sud.append(temp)
 
+        self.numbers = []
+
         # build empty grid
         self.grid = []
 
@@ -135,6 +138,25 @@ class UI:
         generate_new.grid(column=0, row=1, columnspan=9)
 
         self.create_frame()
+
+        pixel_virtual = PhotoImage(width=1, height=1)
+        
+        for i in range(9):
+            self.numbers.append(
+                Button(self.root, text=str(i + 1), image=pixel_virtual, height=45, width=45, compound='c',
+                       command=lambda i=i: self.insert_num(i + 1)))
+            self.numbers[i].grid(column=i, row=2)
+
+        self.check = Button(self.root, text='CHECK', command=self.check_solution)
+        self.check.grid(column=1, row=1)
+
+        self.frame.focus_force()
+        self.frame.config(highlightthickness=0)
+        self.frame.bind('<Button-1>', self.get_xy)
+        self.frame.bind('<Key>', self.insert_key)
+
+
+
         if __name__ == '__main__':
             self.root.mainloop()
 
@@ -261,6 +283,61 @@ class UI:
     def hide_solution(self):
         self.frame.configure(width=455)
         self.option_menu.entryconfig(1, label='Show Solution', command=self.show_solution)
+
+    def get_xy(self, event):
+        self.frame.config(bg='White')
+        self.x = 3 + int(50 * math.floor(event.x / 50))
+        self.y = 3 + int(50 * math.floor(event.y / 50))
+        print(event.x, self.x, event.y, self.y)
+        self.change_color()
+
+    def change_color(self):
+        self.frame.delete('highlight')
+        self.frame.create_rectangle(self.x + 1, self.y + 1, self.x + 50, self.y + 50, outline='',
+                                    fill='#f5c0bc', tag='highlight')
+        self.frame.tag_lower('highlight')
+
+    def insert_key(self, event):
+        self.insert_num(int(event.char))
+
+    def insert_num(self, number):
+        pos_x = math.floor(self.x / 50)
+        pos_y = math.floor(self.y / 50)
+        tags = 'id-%s%s' % (pos_x, pos_y)
+        cell = self.frame.find_withtag(tags)
+        if not len(cell):
+            cell = (0,)
+
+        previous = self.frame.itemcget(cell[-1], 'text')
+
+        self.frame.delete(tags)
+        if not previous == str(number):
+            self.frame.create_text((self.x + 25, self.y + 25),
+                                   anchor='center',
+                                   text=number,
+                                   font=('times new roman', '25'),
+                                   fill='blue',
+                                   tags=(tags, 'insert')
+                                   )
+
+        self.sud[pos_y][pos_x] = number
+
+    def check_solution(self):
+        print(self.sud)
+        if any(0 in i for i in self.sud):
+            print('INCOMPLETE...')
+            for i, k in enumerate(self.sud):
+                for j, l in enumerate(k):
+                    if l == 0:
+                        self.frame.create_rectangle(j * 50 + 4, i * 50 + 4, j * 50 + 53, i * 50 + 53, outline='',
+                                                      fill='#99d3ff', tag='highlight')
+                        self.frame.tag_lower('highlight')
+        elif self.sud == self.solved:
+            print('CORRECT')
+            self.frame.config(bg='#c4ffbd')
+        else:
+            print('INCORRECT, TRY AGAIN...')
+            self.frame.config(bg='#f5c0bc')
 
 
 if __name__ == '__main__':
