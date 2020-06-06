@@ -174,7 +174,6 @@ class UI:
         else:
             self.difficulty = 100
 
-
     def create_frame(self, offset_x=3, offset_y=3):
         for i in range(10):
             if i % 3:
@@ -351,6 +350,7 @@ class UI:
                                                       fill='#99d3ff', tag='highlight')
                         self.frame.tag_lower('highlight')
         elif self.sud == self.solved:
+            self.frame.delete('highlight')
             print('CORRECT')
             self.frame.config(bg='#c4ffbd')
         else:
