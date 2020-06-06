@@ -161,6 +161,7 @@ class UI:
         self.frame.config(highlightthickness=0)
         self.frame.bind('<Button-1>', self.get_xy)
         self.frame.bind('<Key>', self.insert_key)
+        self.frame.bind('<Delete>', self.clear_num)
 
         if __name__ == '__main__':
             self.root.mainloop()
@@ -314,27 +315,30 @@ class UI:
     def insert_key(self, event):
         self.insert_num(int(event.char))
 
+    def clear_num(self, event=None):
+        self.pos_x = math.floor(self.x / 50)
+        self.pos_y = math.floor(self.y / 50)
+        self.tags = 'id-%s%s' % (self.pos_x, self.pos_y)
+
+        self.frame.delete(self.tags)
+
     def insert_num(self, number):
-        pos_x = math.floor(self.x / 50)
-        pos_y = math.floor(self.y / 50)
-        tags = 'id-%s%s' % (pos_x, pos_y)
-        cell = self.frame.find_withtag(tags)
+        self.clear_num()
+        cell = self.frame.find_withtag(self.tags)
         if not len(cell):
             cell = (0,)
 
         previous = self.frame.itemcget(cell[-1], 'text')
-
-        self.frame.delete(tags)
         if not previous == str(number):
             self.frame.create_text((self.x + 25, self.y + 25),
                                    anchor='center',
                                    text=number,
                                    font=('times new roman', '25'),
                                    fill='blue',
-                                   tags=(tags, 'insert')
+                                   tags=(self.tags, 'insert')
                                    )
 
-        self.sud[pos_y][pos_x] = number
+        self.sud[self.pos_y][self.pos_x] = number
 
     def check_solution(self):
         print(self.sud)
