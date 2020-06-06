@@ -1,0 +1,6 @@
+06/06/2020:
+- delete key now removes number in a selected cell
+- arrow keys can now be used to navigate the grid
+
+Known Bugs:
+- adding number to pre-existing cell overlaying them both
