@@ -312,7 +312,20 @@ class UI:
         self.frame.tag_lower('highlight')
 
     def insert_key(self, event):
-        self.insert_num(int(event.char))
+        direction = ['Up', 'Down', 'Right', 'Left']
+        if event.keysym.isdigit():
+            self.insert_num(int(event.keysym))
+        else:
+            if str(event.keysym) == direction[0] and self.y > 3:
+                self.y -= 50
+            elif str(event.keysym) == direction[1] and self.y < 403:
+                self.y += 50
+            elif str(event.keysym) == direction[2] and self.x < 403:
+                self.x += 50
+            elif str(event.keysym) == direction[3] and self.x > 3:
+                self.x -= 50
+
+            self.change_color()
 
     def clear_num(self, event=None):
         self.pos_x = math.floor(self.x / 50)
