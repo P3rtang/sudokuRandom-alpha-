@@ -359,8 +359,11 @@ class UI:
             for i, k in enumerate(self.sud):
                 for j, l in enumerate(k):
                     if l == 0:
-                        self.frame.create_rectangle(j * 50 + 4, i * 50 + 4, j * 50 + 53, i * 50 + 53, outline='',
-                                                      fill='#99d3ff', tag='highlight')
+                        self.frame.create_rectangle(j * 50 + 4, i * 50 + 4, j * 50 + 53, i * 50 + 53,
+                                                    outline='',
+                                                    fill='#99d3ff',
+                                                    tag='highlight'
+                                                    )
                         self.frame.tag_lower('highlight')
         elif self.sud == self.solved:
             self.frame.delete('highlight')
