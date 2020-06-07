@@ -2,5 +2,11 @@
 - delete key now removes number in a selected cell
 - arrow keys can now be used to navigate the grid
 
+07/06/2020:
+- use shift + number to add markers in the top left off the cell 
+	- adding a number twice will remove it
+	- use delete to remove every mark
+	- adding a number in the cell will remove the markers
+
 Known Bugs:
-- adding number to pre-existing cell overlaying them both
+- adding number/marker to pre-existing cell overlaying them both (V0.5, date: 07/06/2020)
