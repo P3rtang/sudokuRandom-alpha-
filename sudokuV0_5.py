@@ -4,6 +4,7 @@ import subprocess
 import random as rand
 import copy
 import math
+import keyboard as kb
 
 
 def unpack(string):
@@ -110,7 +111,7 @@ class UI:
         # build empty grid
         self.grid = []
 
-        # self.sud =  [[2, 9, 7, 3, 6, 8, 1, 4, 5], [8, 4, 5, 1, 9, 7, 3, 2, 6], [6, 3, 1, 4, 5, 2, 7, 8, 9], [1, 8, 9, 5, 4, 6, 2, 3, 7], [5, 2, 6, 7, 3, 1, 4, 9, 8], [3, 7, 4, 2, 8, 9, 6, 5, 1], [7, 1, 8, 9, 2, 4, 5, 6, 3], [4, 6, 3, 8, 7, 5, 9, 1, 2], [9, 5, 2, 6, 1, 3, 8, 7, 4]]
+        # main window
         self.root = Tk()
 
         # create menus
@@ -161,6 +162,8 @@ class UI:
         self.frame.config(highlightthickness=0)
         self.frame.bind('<Button-1>', self.get_xy)
         self.frame.bind('<Key>', self.insert_key)
+        for i in range(1, 10):
+            self.frame.bind(str(i), self.insert_key)
         self.frame.bind('<Delete>', self.clear_num)
 
         if __name__ == '__main__':
@@ -312,9 +315,12 @@ class UI:
         self.frame.tag_lower('highlight')
 
     def insert_key(self, event):
+        print(event)
         direction = ['Up', 'Down', 'Right', 'Left']
         if event.keysym.isdigit():
             self.insert_num(int(event.keysym))
+        elif 49 <= event.keycode <= 57:
+            self.insert_key_shifted(event)
         else:
             if str(event.keysym) == direction[0] and self.y > 3:
                 self.y -= 50
@@ -327,14 +333,45 @@ class UI:
 
             self.change_color()
 
+    def insert_key_shifted(self, event):
+        self.pos_x = math.floor(self.x / 50)
+        self.pos_y = math.floor(self.y / 50)
+        self.tags = 'id-%s%s' % (self.pos_x, self.pos_y)
+
+        if 49 <= event.keycode <= 57 and self.sud[self.pos_y][self.pos_x] == 0:
+            number = event.keycode - 48
+            if self.frame.find_withtag(f'{self.tags}&&shifted_{number}'):
+                self.frame.delete(f'{self.tags}&&shifted_{number}')
+
+                positions = []
+                for i in range(9):
+                    pos = (self.x + 10 * (i % 4), self.y + 10 * int(i/4))
+                    positions.append(pos)
+                for j in self.frame.find_withtag(self.tags):
+                    pos = positions.pop(0)
+                    self.frame.move(j, pos[0] - self.frame.coords(j)[0] + 10, pos[1] - self.frame.coords(j)[1])
+
+            else:
+                cell = self.frame.find_withtag(self.tags)
+                offset_x = 10 * (len(cell) % 4) + 10
+                offset_y = 10 * int(len(cell) / 4)
+                self.frame.create_text((self.x + offset_x, self.y + offset_y),
+                                       anchor='ne',
+                                       text=number,
+                                       font=('times new roman', '10'),
+                                       fill='blue',
+                                       tags=(self.tags, f'shifted_{number}')
+                                       )
+
     def clear_num(self, event=None):
         self.pos_x = math.floor(self.x / 50)
         self.pos_y = math.floor(self.y / 50)
         self.tags = 'id-%s%s' % (self.pos_x, self.pos_y)
 
         self.frame.delete(self.tags)
+        self.sud[self.pos_y][self.pos_x] = 0
 
-    def insert_num(self, number):
+    def insert_num(self, number, shifted=False):
         self.clear_num()
         cell = self.frame.find_withtag(self.tags)
         if not len(cell):
