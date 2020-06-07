@@ -243,7 +243,7 @@ class UI:
                     tester = copy.deepcopy(sudoku)
                     unique = check_unique(tester)
                     # if __name__ == '__main__':
-                        # print(empty, ': ', sudoku)
+                    # print(empty, ': ', sudoku)
                 tries += 1
                 if tries % 10 == 1:
                     print('=', end='')
