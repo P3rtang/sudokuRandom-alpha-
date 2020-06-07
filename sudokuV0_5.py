@@ -161,10 +161,9 @@ class UI:
         self.frame.focus_force()
         self.frame.config(highlightthickness=0)
         self.frame.bind('<Button-1>', self.get_xy)
-        self.frame.bind('<Key>', self.insert_key_shifted)
+        self.frame.bind('<Key>', self.insert_key)
         for i in range(1, 10):
             self.frame.bind(str(i), self.insert_key)
-            self.frame.bind(f'<Shift-{i}>', self.insert_key_shifted)
         self.frame.bind('<Delete>', self.clear_num)
 
         if __name__ == '__main__':
@@ -320,6 +319,8 @@ class UI:
         direction = ['Up', 'Down', 'Right', 'Left']
         if event.keysym.isdigit():
             self.insert_num(int(event.keysym))
+        elif 49 <= event.keycode <= 57:
+            self.insert_key_shifted(event)
         else:
             if str(event.keysym) == direction[0] and self.y > 3:
                 self.y -= 50
@@ -341,7 +342,7 @@ class UI:
             number = event.keycode - 48
             if self.frame.find_withtag(f'{self.tags}&&shifted_{number}'):
                 self.frame.delete(f'{self.tags}&&shifted_{number}')
-                
+
                 positions = []
                 for i in range(9):
                     pos = (self.x + 10 * (i % 4), self.y + 10 * int(i/4))
