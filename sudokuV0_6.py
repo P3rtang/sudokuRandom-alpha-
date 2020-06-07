@@ -4,7 +4,6 @@ import subprocess
 import random as rand
 import copy
 import math
-import keyboard as kb
 
 
 def unpack(string):
@@ -19,6 +18,7 @@ def unpack(string):
         unpacked.append(temp)
     return unpacked
 
+
 def repack(grid):
     repacked = ''
     for x in grid:
@@ -28,12 +28,12 @@ def repack(grid):
 
 
 def check(x, y, n, g):
-    xb = (x // 3)*3
-    yb = (y // 3)*3
+    xb = (x // 3) * 3
+    yb = (y // 3) * 3
 
     for k in range(3):
         for l in range(3):
-            if g[yb+k][xb+l] == n:
+            if g[yb + k][xb + l] == n:
                 return False
 
     for k in range(9):
@@ -57,26 +57,26 @@ def solve(grid, reverse=False):
                         grid[y][x] = n
                         solve(grid, reverse)
                         if not any(0 in i for i in grid):
-                            global solvedgrid
-                            solvedgrid = copy.deepcopy(grid)
+                            # noinspection PyGlobalUndefined
+                            global solved_grid
+                            solved_grid = copy.deepcopy(grid)
                         else:
                             grid[y][x] = 0
                 return
 
 
 def check_unique(sud):
-    global solvedgrid
-    solvedgrid = []
+    # noinspection PyGlobalUndefined
+    global solved_grid
+    solved_grid = []
     test = copy.deepcopy(sud)
 
     solve(test)
-    solve1 = copy.deepcopy(solvedgrid)
-    print(solve1)
+    solve1 = copy.deepcopy(solved_grid)
 
     test = copy.deepcopy(sud)
     solve(test, True)
-    solve2 = copy.deepcopy(solvedgrid)
-    print(solve2)
+    solve2 = copy.deepcopy(solved_grid)
 
     if solve1 == solve2:
         return True
@@ -84,14 +84,14 @@ def check_unique(sud):
         return False
 
 
-def format(string):
+def reformat(string):
     sudoku = []
     puzzle = str(string).split()
     if len(puzzle) != 81:
         raise Exception
     for x in range(9):
         temp = list()
-        for y in puzzle[x*9:(x+1)*9]:
+        for y in puzzle[x * 9:(x + 1) * 9]:
             temp.append(int(y))
         sudoku.append(temp)
     solve(sudoku)
@@ -133,13 +133,21 @@ class UI:
         self.option_menu.add_command(label='Show Solution', command=self.show_solution)
         self.option_menu.add_cascade(label='difficulty', menu=self.diff)
 
-        self.diff.add_command(label='easy', command=lambda :self.set_diff(1))
-        self.diff.add_command(label='normal', command=lambda :self.set_diff(2))
+        self.diff.add_command(label='easy', command=lambda: self.set_diff(1))
+        self.diff.add_command(label='normal', command=lambda: self.set_diff(2))
         self.diff.add_command(label='hard (might take a while)', command=lambda: self.set_diff(3))
 
         self.frame = Canvas(self.root, width=455, height=455)
         self.frameS = Canvas(self.root, width=455, height=455)
         self.display()
+
+        self.pos_x = 0
+        self.pos_y = 0
+        self.x = 0
+        self.y = 0
+        self.tags = ''
+        self.solved = []
+        self.solution = []
 
         # generate new sudoku
         generate_new = Button(self.root, text="New Sudoku", command=self.build)
@@ -152,7 +160,7 @@ class UI:
         for i in range(9):
             self.numbers.append(
                 Button(self.root, text=str(i + 1), image=pixel_virtual, height=45, width=45, compound='c',
-                       command=lambda i=i: self.insert_num(i + 1)))
+                       command=lambda j=i: self.insert_num(j + 1)))
             self.numbers[i].grid(column=i, row=2)
 
         self.check = Button(self.root, text='CHECK', command=self.check_solution)
@@ -180,11 +188,15 @@ class UI:
     def create_frame(self, offset_x=3, offset_y=3):
         for i in range(10):
             if i % 3:
-                self.frame.create_line(offset_x + 50 * i, offset_y + 0, offset_x + 50 * i, offset_y + 450, fill='grey', tag='gridlines')
-                self.frame.create_line(offset_x + 0, offset_y + 50 * i, offset_x + 450, offset_y + 50 * i, fill='grey', tag='gridlines')
+                self.frame.create_line(offset_x + 50 * i, offset_y + 0, offset_x + 50 * i, offset_y + 450, fill='grey',
+                                       tag='gridlines')
+                self.frame.create_line(offset_x + 0, offset_y + 50 * i, offset_x + 450, offset_y + 50 * i, fill='grey',
+                                       tag='gridlines')
             else:
-                self.frame.create_line(offset_x + 50 * i, offset_y + 0, offset_x + 50 * i, offset_y + 450, fill='black', width=2, tag='main_gridlines')
-                self.frame.create_line(offset_x + 0, offset_y + 50 * i, offset_x + 450, offset_y + 50 * i, fill='black', width=2, tag='main_gridlines')
+                self.frame.create_line(offset_x + 50 * i, offset_y + 0, offset_x + 50 * i, offset_y + 450, fill='black',
+                                       width=2, tag='main_gridlines')
+                self.frame.create_line(offset_x + 0, offset_y + 50 * i, offset_x + 450, offset_y + 50 * i, fill='black',
+                                       width=2, tag='main_gridlines')
         self.frame.tag_raise('main_gridlines')
 
     def build(self):
@@ -206,8 +218,8 @@ class UI:
 
         print(self.grid)
         solve(self.grid)
-        sudoku = copy.deepcopy(solvedgrid)
-        self.solved = copy.deepcopy(solvedgrid)
+        sudoku = copy.deepcopy(solved_grid)
+        self.solved = copy.deepcopy(solved_grid)
 
         x = rand.randrange(9)
         y = rand.randrange(9)
@@ -230,8 +242,8 @@ class UI:
                     sudoku[8 - x][8 - y] = 0
                     tester = copy.deepcopy(sudoku)
                     unique = check_unique(tester)
-                    if __name__ == '__main__':
-                        print(empty, ': ', sudoku)
+                    # if __name__ == '__main__':
+                        # print(empty, ': ', sudoku)
                 tries += 1
                 if tries % 10 == 1:
                     print('=', end='')
@@ -288,10 +300,11 @@ class UI:
         subprocess.Popen('.\\saves\\sudoku.pdf', shell=True)
 
     def show_solution(self):
-        global solvedgrid
+        # noinspection PyGlobalUndefined
+        global solved_grid
         copy1 = copy.deepcopy(self.sud)
         solve(copy1)
-        self.solution = solvedgrid
+        self.solution = solved_grid
         self.frame.configure(width=955)
         self.create_frame(500)
         self.option_menu.entryconfig(1, label='Hide Solution', command=self.hide_solution)
@@ -305,7 +318,7 @@ class UI:
         self.frame.config(bg='White')
         self.x = 3 + int(50 * math.floor(event.x / 50))
         self.y = 3 + int(50 * math.floor(event.y / 50))
-        print(event.x, self.x, event.y, self.y)
+        # print(event.x, self.x, event.y, self.y)
         self.change_color()
 
     def change_color(self):
@@ -315,7 +328,7 @@ class UI:
         self.frame.tag_lower('highlight')
 
     def insert_key(self, event):
-        print(event)
+        # print(event)
         direction = ['Up', 'Down', 'Right', 'Left']
         if event.keysym.isdigit():
             self.insert_num(int(event.keysym))
@@ -345,7 +358,7 @@ class UI:
 
                 positions = []
                 for i in range(9):
-                    pos = (self.x + 10 * (i % 4), self.y + 10 * int(i/4))
+                    pos = (self.x + 10 * (i % 4), self.y + 10 * int(i / 4))
                     positions.append(pos)
                 for j in self.frame.find_withtag(self.tags):
                     pos = positions.pop(0)
@@ -363,7 +376,7 @@ class UI:
                                        tags=(self.tags, f'shifted_{number}')
                                        )
 
-    def clear_num(self, event=None):
+    def clear_num(self):
         self.pos_x = math.floor(self.x / 50)
         self.pos_y = math.floor(self.y / 50)
         self.tags = 'id-%s%s' % (self.pos_x, self.pos_y)
@@ -371,7 +384,7 @@ class UI:
         self.frame.delete(self.tags)
         self.sud[self.pos_y][self.pos_x] = 0
 
-    def insert_num(self, number, shifted=False):
+    def insert_num(self, number):
         self.clear_num()
         cell = self.frame.find_withtag(self.tags)
         if not len(cell):
@@ -390,7 +403,6 @@ class UI:
         self.sud[self.pos_y][self.pos_x] = number
 
     def check_solution(self):
-        print(self.sud)
         if any(0 in i for i in self.sud):
             print('INCOMPLETE...')
             for i, k in enumerate(self.sud):
