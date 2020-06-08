@@ -137,21 +137,25 @@ class UI:
         self.diff.add_command(label='normal', command=lambda: self.set_diff(2))
         self.diff.add_command(label='hard (might take a while)', command=lambda: self.set_diff(3))
 
-        self.frame = Canvas(self.root, width=455, height=455)
+        self.frame = Canvas(self.root, width=454, height=454)
         self.frameS = Canvas(self.root, width=455, height=455)
         self.display()
 
         self.pos_x = 0
         self.pos_y = 0
-        self.x = 0
-        self.y = 0
+        self.x = 3
+        self.y = 3
         self.tags = ''
         self.solved = []
         self.solution = []
 
-        # generate new sudoku
+        # generate new sudoku button
         generate_new = Button(self.root, text="New Sudoku", command=self.build)
-        generate_new.grid(column=0, row=1, columnspan=9)
+        generate_new.grid(column=3, row=1, columnspan=3)
+
+        # clear grid button
+        clear_grid = Button(self.root, text='Clear Grid', command=self.frame_clear)
+        clear_grid.grid(column=6, row=1, columnspan=3)
 
         self.create_frame()
 
@@ -164,7 +168,7 @@ class UI:
             self.numbers[i].grid(column=i, row=2)
 
         self.check = Button(self.root, text='CHECK', command=self.check_solution)
-        self.check.grid(column=1, row=1)
+        self.check.grid(column=0, row=1, columnspan=3)
 
         self.frame.focus_force()
         self.frame.config(highlightthickness=0)
@@ -233,6 +237,7 @@ class UI:
 
         while tries < self.difficulty and empty < 54:
             while unique == 1 and tries < self.difficulty:
+                self.root.update()
                 x = rand.randrange(9)
                 y = rand.randrange(9)
                 b = sudoku[x][y]
@@ -260,6 +265,10 @@ class UI:
         self.sud = sudoku
         self.display()
 
+    def frame_clear(self):
+        self.frame.delete('mark', 'insert', 'highlight')
+        self.frame.config(bg='WHITE')
+
     def display(self, solution=False):
         def fill_grid(offset_x=3, offset_y=3):
             for i in range(height):  # Rows
@@ -273,8 +282,8 @@ class UI:
         height = 9
         width = 9
         if not solution:
+            self.frame_clear()
             self.frame.delete('text')
-            self.frame.delete('insert')
             numbers = self.sud
             fill_grid()
         else:
@@ -373,10 +382,11 @@ class UI:
                                        text=number,
                                        font=('times new roman', '10'),
                                        fill='blue',
-                                       tags=(self.tags, f'shifted_{number}')
+                                       tags=(self.tags, f'shifted_{number}', 'mark')
                                        )
 
-    def clear_num(self):
+    def clear_num(self, *_event):
+
         self.pos_x = math.floor(self.x / 50)
         self.pos_y = math.floor(self.y / 50)
         self.tags = 'id-%s%s' % (self.pos_x, self.pos_y)
