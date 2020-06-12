@@ -3,4 +3,5 @@
 - arrow keys can now be used to navigate the grid
 
 Known Bugs:
-- adding number to pre-existing cell overlaying them both
+- adding number to pre-existing cell overlaying them both.
+- pressing delete while a given cell is selcted will result in not being able to check the sudoku.
