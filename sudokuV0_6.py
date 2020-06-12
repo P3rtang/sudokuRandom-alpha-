@@ -85,6 +85,8 @@ def check_unique(sud):
 
 
 def reformat(string):
+    # used to format the sudoku into a unique string representing the digits
+    # going line by line no spaces
     sudoku = []
     puzzle = str(string).split()
     if len(puzzle) != 81:
@@ -98,6 +100,7 @@ def reformat(string):
 
 
 class UI:
+    # main UI element defined as a class to modify geometry and widget easier
     def __init__(self):
         # create empty sudoku
         self.sud = []
@@ -137,15 +140,21 @@ class UI:
         self.diff.add_command(label='normal', command=lambda: self.set_diff(2))
         self.diff.add_command(label='hard (might take a while)', command=lambda: self.set_diff(3))
 
+        # main frame where in the sudoku is rendered
         self.frame = Canvas(self.root, width=454, height=454)
         self.frameS = Canvas(self.root, width=455, height=455)
+
+        # main function to display the sudoku onto the frame
         self.display()
 
+        # identifiers to keep track of the selected cell and the types of widgets the Canvas contains
         self.pos_x = 0
         self.pos_y = 0
         self.x = 3
         self.y = 3
         self.tags = ''
+
+        # Lists keeping track of the solution and filled in numbers
         self.solved = []
         self.solution = []
 
@@ -157,30 +166,41 @@ class UI:
         clear_grid = Button(self.root, text='Clear Grid', command=self.frame_clear)
         clear_grid.grid(column=6, row=1, columnspan=3)
 
+        # function that creates the grid
         self.create_frame()
 
+        # pixel to convert padding from being character based to pixel based
         pixel_virtual = PhotoImage(width=1, height=1)
 
+        # creating and displaying button to help fill in the sudoku for use without keyboard
         for i in range(9):
             self.numbers.append(
                 Button(self.root, text=str(i + 1), image=pixel_virtual, height=45, width=45, compound='c',
                        command=lambda j=i: self.insert_num(j + 1)))
             self.numbers[i].grid(column=i, row=2)
 
+        # Button to check the filled in solution
         self.check = Button(self.root, text='CHECK', command=self.check_solution)
         self.check.grid(column=0, row=1, columnspan=3)
 
+        # force focus the frame so keyboard can fill numbers into the grid
         self.frame.focus_force()
         self.frame.config(highlightthickness=0)
+
+        # adding functionality to keyboard shortcuts
         self.frame.bind('<Button-1>', self.get_xy)
         self.frame.bind('<Key>', self.insert_key)
         for i in range(1, 10):
             self.frame.bind(str(i), self.insert_key)
         self.frame.bind('<Delete>', self.clear_num)
 
+        # if the program is run natively a new board will directly be generated
+        # without needing to call a separate function in the command window
+        # if the program is not run directly other feature may be implemented easier
         if __name__ == '__main__':
             self.root.mainloop()
 
+    # function to set the difficulty still not fully working
     def set_diff(self, diff):
         if diff == 1:
             self.difficulty = 40
@@ -189,18 +209,26 @@ class UI:
         else:
             self.difficulty = 100
 
-    def create_frame(self, offset_x=3, offset_y=3):
+    # frame creation
+    """offset x and y are used to position the grid onto any size frame"""
+    def create_frame(self, offset_x=3, offset_y=3, color=('black', 'grey')):
         for i in range(10):
             if i % 3:
-                self.frame.create_line(offset_x + 50 * i, offset_y + 0, offset_x + 50 * i, offset_y + 450, fill='grey',
+                self.frame.create_line(offset_x + 50 * i, offset_y + 0, offset_x + 50 * i, offset_y + 450,
+                                       fill=color[1],
                                        tag='gridlines')
-                self.frame.create_line(offset_x + 0, offset_y + 50 * i, offset_x + 450, offset_y + 50 * i, fill='grey',
+                self.frame.create_line(offset_x + 0, offset_y + 50 * i, offset_x + 450, offset_y + 50 * i,
+                                       fill=color[1],
                                        tag='gridlines')
             else:
-                self.frame.create_line(offset_x + 50 * i, offset_y + 0, offset_x + 50 * i, offset_y + 450, fill='black',
-                                       width=2, tag='main_gridlines')
-                self.frame.create_line(offset_x + 0, offset_y + 50 * i, offset_x + 450, offset_y + 50 * i, fill='black',
-                                       width=2, tag='main_gridlines')
+                self.frame.create_line(offset_x + 50 * i, offset_y + 0, offset_x + 50 * i, offset_y + 450,
+                                       fill=color[0],
+                                       width=2,
+                                       tag='main_gridlines')
+                self.frame.create_line(offset_x + 0, offset_y + 50 * i, offset_x + 450, offset_y + 50 * i,
+                                       fill=color[0],
+                                       width=2,
+                                       tag='main_gridlines')
         self.frame.tag_raise('main_gridlines')
 
     def build(self):
@@ -233,6 +261,7 @@ class UI:
         sudoku[8 - x][8 - y] = 0
         tester = copy.deepcopy(sudoku)
 
+        # check for uniqueness and store the boolean in the unique variable for possible exception
         unique = check_unique(tester)
 
         while tries < self.difficulty and empty < 54:
