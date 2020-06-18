@@ -6,6 +6,14 @@ import copy
 import math
 
 
+def quick_solve(string):
+    # execute unpack to form a grid in the form of a list
+    # execute solve function with the unpacked string
+    sudoku = unpack(string)
+    solve(sudoku)
+    return solved_grid
+
+
 def unpack(string):
     unpacked = []
     if len(string) != 81:
@@ -84,21 +92,6 @@ def check_unique(sud):
         return False
 
 
-def reformat(string):
-    # used to format the sudoku into a unique string representing the digits
-    # going line by line no spaces
-    sudoku = []
-    puzzle = str(string).split()
-    if len(puzzle) != 81:
-        raise Exception
-    for x in range(9):
-        temp = list()
-        for y in puzzle[x * 9:(x + 1) * 9]:
-            temp.append(int(y))
-        sudoku.append(temp)
-    solve(sudoku)
-
-
 class UI:
     # main UI element defined as a class to modify geometry and widget easier
     def __init__(self):
@@ -152,6 +145,7 @@ class UI:
         self.pos_y = 0
         self.x = 3
         self.y = 3
+        self.selection = []
         self.tags = ''
 
         # Lists keeping track of the solution and filled in numbers
@@ -188,7 +182,9 @@ class UI:
         self.frame.config(highlightthickness=0)
 
         # adding functionality to keyboard shortcuts
+        self.frame.bind('<Control-Button-1>', self.get_held_xy)
         self.frame.bind('<Button-1>', self.get_xy)
+        self.frame.bind('<B1-Motion>', self.get_held_xy)
         self.frame.bind('<Key>', self.insert_key)
         for i in range(1, 10):
             self.frame.bind(str(i), self.insert_key)
@@ -352,15 +348,26 @@ class UI:
         self.frame.configure(width=455)
         self.option_menu.entryconfig(1, label='Show Solution', command=self.show_solution)
 
-    def get_xy(self, event):
+    def get_xy(self, event, clear=True):
         self.frame.config(bg='White')
         self.x = 3 + int(50 * math.floor(event.x / 50))
         self.y = 3 + int(50 * math.floor(event.y / 50))
         # print(event.x, self.x, event.y, self.y)
-        self.change_color()
+        if clear:
+            self.selection = []
+        selected = (self.x, self.y)
+        if selected not in self.selection:
+            self.selection.append(selected)
 
-    def change_color(self):
-        self.frame.delete('highlight')
+        self.change_color(clear)
+
+    def get_held_xy(self, event):
+        self.get_xy(event, False)
+
+    def change_color(self, clear=True):
+        if clear:
+            self.frame.delete('highlight')
+
         self.frame.create_rectangle(self.x + 1, self.y + 1, self.x + 50, self.y + 50, outline='',
                                     fill='#f5c0bc', tag='highlight')
         self.frame.tag_lower('highlight')
@@ -372,7 +379,7 @@ class UI:
             self.insert_num(int(event.keysym))
         elif 49 <= event.keycode <= 57:
             self.insert_key_shifted(event)
-        else:
+        elif event.keysym in direction:
             if str(event.keysym) == direction[0] and self.y > 3:
                 self.y -= 50
             elif str(event.keysym) == direction[1] and self.y < 403:
@@ -381,38 +388,55 @@ class UI:
                 self.x += 50
             elif str(event.keysym) == direction[3] and self.x > 3:
                 self.x -= 50
+            selected = (self.x, self.y)
+            if selected not in self.selection:
+                self.selection.append(selected)
 
             self.change_color()
 
+    def insert_num(self, number):
+        for self.x, self.y in self.selection:
+            self.clear_num()
+            self.frame.create_text((self.x + 25, self.y + 25),
+                                   anchor='center',
+                                   text=number,
+                                   font=('times new roman', '25'),
+                                   fill='blue',
+                                   tags=(self.tags, 'insert')
+                                   )
+
+            self.sud[self.pos_y][self.pos_x] = number
+
     def insert_key_shifted(self, event):
-        self.pos_x = math.floor(self.x / 50)
-        self.pos_y = math.floor(self.y / 50)
-        self.tags = 'id-%s%s' % (self.pos_x, self.pos_y)
+        for self.x, self.y in self.selection:
+            self.pos_x = math.floor(self.x / 50)
+            self.pos_y = math.floor(self.y / 50)
+            self.tags = 'id-%s%s' % (self.pos_x, self.pos_y)
 
-        if 49 <= event.keycode <= 57 and self.sud[self.pos_y][self.pos_x] == 0:
-            number = event.keycode - 48
-            if self.frame.find_withtag(f'{self.tags}&&shifted_{number}'):
-                self.frame.delete(f'{self.tags}&&shifted_{number}')
+            if 49 <= event.keycode <= 57 and self.sud[self.pos_y][self.pos_x] == 0:
+                number = event.keycode - 48
+                if self.frame.find_withtag(f'{self.tags}&&shifted_{number}'):
+                    self.frame.delete(f'{self.tags}&&shifted_{number}')
 
-                positions = []
-                for i in range(9):
-                    pos = (self.x + 10 * (i % 4), self.y + 10 * int(i / 4))
-                    positions.append(pos)
-                for j in self.frame.find_withtag(self.tags):
-                    pos = positions.pop(0)
-                    self.frame.move(j, pos[0] - self.frame.coords(j)[0] + 10, pos[1] - self.frame.coords(j)[1])
+                    positions = []
+                    for i in range(9):
+                        pos = (self.x + 10 * (i % 4), self.y + 10 * int(i / 4))
+                        positions.append(pos)
+                    for j in self.frame.find_withtag(self.tags):
+                        pos = positions.pop(0)
+                        self.frame.move(j, pos[0] - self.frame.coords(j)[0] + 10, pos[1] - self.frame.coords(j)[1])
 
-            else:
-                cell = self.frame.find_withtag(self.tags)
-                offset_x = 10 * (len(cell) % 4) + 10
-                offset_y = 10 * int(len(cell) / 4)
-                self.frame.create_text((self.x + offset_x, self.y + offset_y),
-                                       anchor='ne',
-                                       text=number,
-                                       font=('times new roman', '10'),
-                                       fill='blue',
-                                       tags=(self.tags, f'shifted_{number}', 'mark')
-                                       )
+                else:
+                    cell = self.frame.find_withtag(self.tags)
+                    offset_x = 10 * (len(cell) % 4) + 10
+                    offset_y = 10 * int(len(cell) / 4)
+                    self.frame.create_text((self.x + offset_x, self.y + offset_y),
+                                           anchor='ne',
+                                           text=number,
+                                           font=('times new roman', '10'),
+                                           fill='blue',
+                                           tags=(self.tags, f'shifted_{number}', 'mark')
+                                           )
 
     def clear_num(self, *_event):
 
@@ -422,24 +446,6 @@ class UI:
 
         self.frame.delete(self.tags)
         self.sud[self.pos_y][self.pos_x] = 0
-
-    def insert_num(self, number):
-        self.clear_num()
-        cell = self.frame.find_withtag(self.tags)
-        if not len(cell):
-            cell = (0,)
-
-        previous = self.frame.itemcget(cell[-1], 'text')
-        if not previous == str(number):
-            self.frame.create_text((self.x + 25, self.y + 25),
-                                   anchor='center',
-                                   text=number,
-                                   font=('times new roman', '25'),
-                                   fill='blue',
-                                   tags=(self.tags, 'insert')
-                                   )
-
-        self.sud[self.pos_y][self.pos_x] = number
 
     def check_solution(self):
         if any(0 in i for i in self.sud):
